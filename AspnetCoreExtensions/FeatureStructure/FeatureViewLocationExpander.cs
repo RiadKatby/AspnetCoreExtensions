@@ -16,11 +16,19 @@ namespace AspnetCoreExtensions.FeatureStructure
             if (viewLocations == null)
                 throw new ArgumentNullException(nameof(viewLocations));
 
-            var controllerActionDescriptor = context.ActionContext.ActionDescriptor as ControllerActionDescriptor;
-            if (controllerActionDescriptor == null)
-                throw new NullReferenceException("ControllerActionDescriptor cannot be null.");
+            var properties = context.ActionContext.ActionDescriptor.Properties;
+            var featureName = properties["feature"] as string;
 
-            string featureName = controllerActionDescriptor.Properties["feature"] as string;
+            //var controllerActionDescriptor = context.ActionContext.ActionDescriptor as ControllerActionDescriptor;
+            //if (controllerActionDescriptor == null)
+            //{
+                //foreach (var item in viewLocations)
+                  //  yield return item;
+                //yield break;
+            //}
+            //throw new NullReferenceException("ControllerActionDescriptor cannot be null.");
+
+            //string featureName = controllerActionDescriptor.Properties["feature"] as string;
             foreach (var location in viewLocations)
                 yield return location.Replace("{3}", featureName);
         }
