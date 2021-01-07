@@ -105,5 +105,10 @@ namespace AspnetCoreExtensions.CacheBasies
             // use the string representation of the expression for the cache key
             return expression.ToString();
         }
+
+        public static string CacheKey<TSearchCriteria>(this IMemoryCache cache, TSearchCriteria criteria)
+        {
+            return "";
+        }
     }
 }
