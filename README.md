@@ -14,3 +14,7 @@ Yet another Micro ORM (Object Relational Mapper) for .NET platform with vision o
 1. Zero learning Curve to start with you need no experiance that ADO.NET
 2. Zero complexy it is just an extentions overy SqlConnection and SqlDataReader
 3. Zero latency it is the fastest ORM among others
+
+Zero ORM features:
+* Strongly typed versions of ExecuteSclaerAsync, ExecuteNonQueryAsync, and ExecuteReaderAsync.
+* Strongly typed mapping ToEntity, and ToList
