@@ -27,6 +27,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation for The first column of the first row in the result set, or a null if the result set is empty. Returns a maximum of 2033 characters.</returns>
         public static async Task<object> ExecuteScalerAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T entity, CancellationToken cancellationToken)
@@ -40,7 +41,7 @@ namespace ZeroORM
             if (string.IsNullOrEmpty(commandText))
                 throw new ArgumentException("message", nameof(commandText));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, entity);
+            var sqlParameters = CreateSqlParameters(commandText, entity);
 
             using var command = new SqlCommand(commandText, connection, transaction);
             command.Parameters.AddRange(sqlParameters.ToArray());
@@ -48,6 +49,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation for The first column of the first row in the result set, or a null if the result set is empty. Returns a maximum of 2033 characters.</returns>
         public static async Task<object> ExecuteScallerAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
@@ -58,7 +60,7 @@ namespace ZeroORM
             if (string.IsNullOrEmpty(commandText))
                 throw new ArgumentException("message", nameof(commandText));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
+            var sqlParameters = CreateSqlParameters(commandText, value);
 
             using var command = new SqlCommand(commandText, connection);
             command.Parameters.AddRange(sqlParameters.ToArray());
@@ -66,6 +68,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation for The first column of the first row in the result set, or a null if the result set is empty. Returns a maximum of 2033 characters.</returns>
         public static async Task<object> ExecuteScalerAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
@@ -85,6 +88,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation for The number of rows affected.</returns>
         public static async Task<int> ExecuteNonQueryAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T value, CancellationToken cancellationToken)
@@ -98,7 +102,7 @@ namespace ZeroORM
             if (string.IsNullOrEmpty(commandText))
                 throw new ArgumentException("message", nameof(commandText));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
+            var sqlParameters = CreateSqlParameters(commandText, value);
 
             using var command = new SqlCommand(commandText, connection, transaction);
             command.Parameters.AddRange(sqlParameters.ToArray());
@@ -106,6 +110,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation for The number of rows affected.</returns>
         public static async Task<int> ExecuteNonQueryAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
@@ -116,7 +121,7 @@ namespace ZeroORM
             if (string.IsNullOrEmpty(commandText))
                 throw new ArgumentException("message", nameof(commandText));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
+            var sqlParameters = CreateSqlParameters(commandText, value);
 
             using var command = new SqlCommand(commandText, connection);
             command.Parameters.AddRange(sqlParameters.ToArray());
@@ -124,6 +129,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation for The number of rows affected.</returns>
         public static async Task<int> ExecuteNonQueryAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
@@ -137,7 +143,7 @@ namespace ZeroORM
             if (value is null)
                 throw new ArgumentNullException(nameof(value));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
+            var sqlParameters = CreateSqlParameters(commandText, value);
 
             using var connection = await OpenConnectionAsync(connectionString, cancellationToken);
             using var command = new SqlCommand(commandText, connection);
@@ -146,6 +152,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation. for instance of <see cref="SqlDataReader"/>.</returns>
         public static async Task<SqlDataReader> ExecuteReaderAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T value, CancellationToken cancellationToken)
@@ -167,6 +174,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation. for instance of <see cref="SqlDataReader"/>.</returns>
         public static async Task<SqlDataReader> ExecuteReaderAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
@@ -185,6 +193,7 @@ namespace ZeroORM
         }
 
         /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="value">value or values for <paramref name="commandText"/> parametrized ad-hoc statement, Could be any primetive type, object, <see cref="SqlParameter"/>, or <see cref="IEnumerable{SqlParameter}"/>.</param>
         /// <param name="cancellationToken">The cancellation instruction.</param>
         /// <returns>A task representing the asynchronous operation. for instance of <see cref="SqlDataReader"/>.</returns>
         public static async Task<SqlDataReader> ExecuteReaderAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
@@ -203,7 +212,7 @@ namespace ZeroORM
             return await command.ExecuteReaderAsync(System.Data.CommandBehavior.CloseConnection, cancellationToken);
         }
 
-        private static List<SqlParameter> CreateSqlParameters<T>(string commandText, T entity)
+        private static IEnumerable<SqlParameter> CreateSqlParameters<T>(string commandText, T entity)
         {
             List<SqlParameter> sqlParameters = new List<SqlParameter>();
 
@@ -224,6 +233,28 @@ namespace ZeroORM
                     sqlParameters.Add(new SqlParameter(parameterNames.First(), entity));
 
                 return sqlParameters;
+            }
+
+            if (entityType == typeof(SqlParameter))
+            {
+                if (parameterNames.Count() > 1)
+                    throw new InvalidOperationException($"Expect commandText to have SQL statement with only one parameter.\r\nSpecified Parameters[{string.Join(", ", parameterNames)}]");
+
+                // Workaround as entity may be premitive as previously handled
+                object tempSqlParam = entity;
+                SqlParameter sqlParam = tempSqlParam as SqlParameter;
+
+                if (sqlParam.ParameterName != parameterNames.First())
+                    throw new InvalidOperationException($"CommandText ParameterName[{parameterNames.First()}] and SqlParameter[{sqlParam.ParameterName}] have to be same.");
+
+                sqlParameters.Add(sqlParam);
+            }
+
+            var genericType = entityType.GetGenericArguments().FirstOrDefault();
+            if (genericType != null && genericType == typeof(SqlParameter))
+            {
+                object tempSqlParamList = entity;
+                return (IEnumerable<SqlParameter>)tempSqlParamList;
             }
 
             foreach (var parameterName in parameterNames)
