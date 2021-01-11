@@ -26,6 +26,9 @@ namespace ZeroORM
             return connection;
         }
 
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation for The first column of the first row in the result set, or a null if the result set is empty. Returns a maximum of 2033 characters.</returns>
         public static async Task<object> ExecuteScalerAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T entity, CancellationToken cancellationToken)
         {
             if (connection is null)
@@ -44,6 +47,27 @@ namespace ZeroORM
             return await command.ExecuteScalarAsync(cancellationToken);
         }
 
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation for The first column of the first row in the result set, or a null if the result set is empty. Returns a maximum of 2033 characters.</returns>
+        public static async Task<object> ExecuteScallerAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
+        {
+            if (connection is null)
+                throw new ArgumentNullException(nameof(connection));
+
+            if (string.IsNullOrEmpty(commandText))
+                throw new ArgumentException("message", nameof(commandText));
+
+            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
+
+            using var command = new SqlCommand(commandText, connection);
+            command.Parameters.AddRange(sqlParameters.ToArray());
+            return await command.ExecuteScalarAsync(cancellationToken);
+        }
+
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation for The first column of the first row in the result set, or a null if the result set is empty. Returns a maximum of 2033 characters.</returns>
         public static async Task<object> ExecuteScalerAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(connectionString))
@@ -60,7 +84,10 @@ namespace ZeroORM
             return await command.ExecuteScalarAsync(cancellationToken);
         }
 
-        public static async Task<int> ExecuteNonQueryAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T entity, CancellationToken cancellationToken)
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation for The number of rows affected.</returns>
+        public static async Task<int> ExecuteNonQueryAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T value, CancellationToken cancellationToken)
         {
             if (connection is null)
                 throw new ArgumentNullException(nameof(connection));
@@ -71,13 +98,34 @@ namespace ZeroORM
             if (string.IsNullOrEmpty(commandText))
                 throw new ArgumentException("message", nameof(commandText));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, entity);
+            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
 
             using var command = new SqlCommand(commandText, connection, transaction);
             command.Parameters.AddRange(sqlParameters.ToArray());
             return await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation for The number of rows affected.</returns>
+        public static async Task<int> ExecuteNonQueryAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
+        {
+            if (connection is null)
+                throw new ArgumentNullException(nameof(connection));
+
+            if (string.IsNullOrEmpty(commandText))
+                throw new ArgumentException("message", nameof(commandText));
+
+            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
+
+            using var command = new SqlCommand(commandText, connection);
+            command.Parameters.AddRange(sqlParameters.ToArray());
+            return await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation for The number of rows affected.</returns>
         public static async Task<int> ExecuteNonQueryAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(connectionString))
@@ -97,7 +145,10 @@ namespace ZeroORM
             return await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        public static async Task<SqlDataReader> ExecuteReaderAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation. for instance of <see cref="SqlDataReader"/>.</returns>
+        public static async Task<SqlDataReader> ExecuteReaderAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T value, CancellationToken cancellationToken)
         {
             if (connection is null)
                 throw new ArgumentNullException(nameof(connection));
@@ -110,11 +161,32 @@ namespace ZeroORM
 
             var sqlParameters = CreateSqlParameters(commandText, value);
 
+            using var command = new SqlCommand(commandText, connection, transaction);
+            command.Parameters.AddRange(sqlParameters.ToArray());
+            return await command.ExecuteReaderAsync(cancellationToken);
+        }
+
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation. for instance of <see cref="SqlDataReader"/>.</returns>
+        public static async Task<SqlDataReader> ExecuteReaderAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
+        {
+            if (connection is null)
+                throw new ArgumentNullException(nameof(connection));
+
+            if (string.IsNullOrEmpty(commandText))
+                throw new ArgumentException("message", nameof(commandText));
+
+            var sqlParameters = CreateSqlParameters(commandText, value);
+
             using var command = new SqlCommand(commandText, connection);
             command.Parameters.AddRange(sqlParameters.ToArray());
             return await command.ExecuteReaderAsync(cancellationToken);
         }
 
+        /// <param name="commandText">Ad-hoc SQL Command.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>A task representing the asynchronous operation. for instance of <see cref="SqlDataReader"/>.</returns>
         public static async Task<SqlDataReader> ExecuteReaderAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(connectionString))

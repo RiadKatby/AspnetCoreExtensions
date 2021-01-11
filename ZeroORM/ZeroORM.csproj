@@ -4,9 +4,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackageId>SwazerLab.ZeroORM</PackageId>
     <Description>Super performance Micro-ORM for SQL Server, with Zero (Learning Curve, Complexity, and Latency).</Description>
-    <Version>0.0.2</Version>
+    <Version>0.0.3</Version>
     <Authors>Mohammad R. Katby</Authors>
     <Company>SwazerLab</Company>
+    <RepositoryUrl>https://github.com/RiadKatby/AspnetCoreExtensions</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
