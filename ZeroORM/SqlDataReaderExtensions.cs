@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace AspnetCoreExtensions.SqlBasies
+namespace ZeroORM
 {
     public static class SqlDataReaderExtensions
     {
@@ -35,6 +37,31 @@ namespace AspnetCoreExtensions.SqlBasies
             return reader.SetValues<T>(entity, postSet);
         }
 
+        /// <summary>
+        /// Instance of <typeparamref name="T"/> if SqlDataReader HasRow, Null otherwise.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="reader"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public static async Task<T> ToEntityAsync<T>(this SqlDataReader reader, CancellationToken cancellationToken)
+            where T : new()
+        {
+            return await reader.ToEntityAsync<T>(null, cancellationToken);
+        }
+
+        public static async Task<T> ToEntityAsync<T>(this SqlDataReader reader, Action<T> postSet, CancellationToken cancellationToken)
+            where T : new()
+        {
+            var entityType = typeof(T);
+            var entity = (T)Activator.CreateInstance(entityType);
+
+            if (await reader.ReadAsync(cancellationToken))
+                return reader.SetValues(entity, postSet);
+
+            return default(T);
+        }
+
         public static List<T> ToList<T>(this SqlDataReader reader, Action<T> postSet = null)
             where T : new()
         {
@@ -43,6 +70,38 @@ namespace AspnetCoreExtensions.SqlBasies
                 items.Add(reader.ToEntity<T>(postSet));
 
             return items;
+        }
+
+        public static async Task<List<T>> ToListAsync<T>(this SqlDataReader reader, CancellationToken cancellationToken)
+            where T : new()
+        {
+            List<T> items = new List<T>();
+            while (await reader.ReadAsync(cancellationToken))
+                items.Add(reader.ToEntity<T>());
+
+            return items;
+        }
+
+        /// <summary>
+        /// Fill up specified entities list will all record in specified instance of SqlDataReader.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="reader">SqlDataReader instance to be mapped into List of T</param>
+        /// <param name="entities">List of entities that will populated with all entitites</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task</returns>
+        public static async Task SetListAsync<T>(this SqlDataReader reader, ICollection<T> entities, CancellationToken cancellationToken)
+            where T : new()
+        {
+            while (await reader.ReadAsync(cancellationToken))
+                entities.Add(reader.ToEntity<T>());
+        }
+
+        public static async Task SetListAsync<T>(this SqlDataReader reader, ICollection<T> entities, Action<T> postSet, CancellationToken cancellationToken)
+            where T : new()
+        {
+            while (await reader.ReadAsync(cancellationToken))
+                entities.Add(reader.ToEntity<T>(postSet));
         }
 
         /// <summary>

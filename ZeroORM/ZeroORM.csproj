@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>SwazerLab.ZeroORM</PackageId>
+    <Description>Super performance Micro-ORM for SQL Server, with Zero (Learning Curve, Complexity, and Latency).</Description>
+    <Version>0.0.2</Version>
+    <Authors>Mohammad R. Katby</Authors>
+    <Company>SwazerLab</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+  </ItemGroup>
+</Project>

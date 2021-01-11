@@ -8,9 +8,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AspnetCoreExtensions.SqlBasies
+namespace ZeroORM
 {
-    public static class SqlConnectionExtensions
+    public static class SqlHelper
     {
         /// <summary>
         /// Asynchronously Create and Open new instance of SqlConnection using specified connectionString.
@@ -44,6 +44,22 @@ namespace AspnetCoreExtensions.SqlBasies
             return await command.ExecuteScalarAsync(cancellationToken);
         }
 
+        public static async Task<object> ExecuteScalerAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(connectionString))
+                throw new ArgumentException("message", nameof(connectionString));
+
+            if (string.IsNullOrEmpty(commandText))
+                throw new ArgumentException("message", nameof(commandText));
+
+            var sqlParameters = CreateSqlParameters(commandText, value);
+
+            using var connection = await OpenConnectionAsync(connectionString, cancellationToken);
+            using var command = new SqlCommand(commandText, connection);
+            command.Parameters.AddRange(sqlParameters.ToArray());
+            return await command.ExecuteScalarAsync(cancellationToken);
+        }
+
         public static async Task<int> ExecuteNonQueryAsync<T>(this SqlConnection connection, SqlTransaction transaction, string commandText, T entity, CancellationToken cancellationToken)
         {
             if (connection is null)
@@ -62,7 +78,7 @@ namespace AspnetCoreExtensions.SqlBasies
             return await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        public static async Task<int> ExecuteNonQueryAsync<T>(string connectionString, string commandText, T entity, CancellationToken cancellationToken)
+        public static async Task<int> ExecuteNonQueryAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(connectionString))
                 throw new ArgumentException("message", nameof(connectionString));
@@ -70,10 +86,10 @@ namespace AspnetCoreExtensions.SqlBasies
             if (string.IsNullOrEmpty(commandText))
                 throw new ArgumentException("message", nameof(commandText));
 
-            if (entity is null)
-                throw new ArgumentNullException(nameof(entity));
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
 
-            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, entity);
+            List<SqlParameter> sqlParameters = CreateSqlParameters(commandText, value);
 
             using var connection = await OpenConnectionAsync(connectionString, cancellationToken);
             using var command = new SqlCommand(commandText, connection);
@@ -81,14 +97,63 @@ namespace AspnetCoreExtensions.SqlBasies
             return await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        public static async Task<SqlDataReader> ExecuteReaderAsync<T>(this SqlConnection connection, string commandText, T value, CancellationToken cancellationToken)
+        {
+            if (connection is null)
+                throw new ArgumentNullException(nameof(connection));
 
+            if (connection.State != System.Data.ConnectionState.Open)
+                throw new InvalidOperationException("connection need to be Opened before the call.");
+
+            if (string.IsNullOrEmpty(commandText))
+                throw new ArgumentException("message", nameof(commandText));
+
+            var sqlParameters = CreateSqlParameters(commandText, value);
+
+            using var command = new SqlCommand(commandText, connection);
+            command.Parameters.AddRange(sqlParameters.ToArray());
+            return await command.ExecuteReaderAsync(cancellationToken);
+        }
+
+        public static async Task<SqlDataReader> ExecuteReaderAsync<T>(string connectionString, string commandText, T value, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(connectionString))
+                throw new ArgumentException("message", nameof(connectionString));
+
+            if (string.IsNullOrEmpty(commandText))
+                throw new ArgumentException("message", nameof(commandText));
+
+            var sqlParameters = CreateSqlParameters(commandText, value);
+
+            var connection = await OpenConnectionAsync(connectionString, cancellationToken);
+            using var command = new SqlCommand(commandText, connection);
+            command.Parameters.AddRange(sqlParameters.ToArray());
+            return await command.ExecuteReaderAsync(System.Data.CommandBehavior.CloseConnection, cancellationToken);
+        }
 
         private static List<SqlParameter> CreateSqlParameters<T>(string commandText, T entity)
         {
             List<SqlParameter> sqlParameters = new List<SqlParameter>();
 
             var regex = new Regex(@"(?<param>[:@]\w*)");
-            var parameterNames = regex.Matches(commandText).Cast<Match>().Select(x => x.Groups["param"].Value);
+            var parameterNames = regex.Matches(commandText).Cast<Match>().Select(x => x.Groups["param"].Value).Distinct();
+
+            var entityType = typeof(T);
+            bool isPrimitiveType = entityType.IsPrimitive || entityType.IsValueType || (entityType == typeof(string));
+
+            if (isPrimitiveType)
+            {
+                if (parameterNames.Count() > 1)
+                    throw new InvalidOperationException($"Expect commandText to have SQL statement with only one parameter.\r\nSpecified Parameters[{string.Join(", ", parameterNames)}]");
+
+                if (entity == null)
+                    sqlParameters.Add(new SqlParameter(parameterNames.First(), DBNull.Value));
+                else
+                    sqlParameters.Add(new SqlParameter(parameterNames.First(), entity));
+
+                return sqlParameters;
+            }
+
             foreach (var parameterName in parameterNames)
             {
                 var propertyInfo = PropertyInfoExtensions.GetProperty<T>(parameterName.Substring(1));
@@ -102,35 +167,6 @@ namespace AspnetCoreExtensions.SqlBasies
             }
 
             return sqlParameters;
-        }
-
-        public static SqlParameter CreateSqlParameter(string commandText, object singleParameter)
-        {
-            var regex = new Regex(@"(?<param>[:@]\w*)");
-            var parameterNames = regex.Matches(commandText).Cast<Match>().Select(x => x.Groups["param"].Value);
-            if (parameterNames.Count() > 1)
-                throw new InvalidOperationException($"Expect commandText to have SQL statement with only one parameter.\r\nSpecified Parameters[{string.Join(", ", parameterNames)}]");
-
-            return new SqlParameter(parameterNames.First(), singleParameter ?? DBNull.Value);
-        }
-
-        public static async Task<SqlDataReader> ExecuteReaderAsync(string connectionString, string commandText, object singleParameter, CancellationToken cancellationToken)
-        {
-            if (string.IsNullOrEmpty(connectionString))
-                throw new ArgumentException("message", nameof(connectionString));
-
-            if (string.IsNullOrEmpty(commandText))
-                throw new ArgumentException("message", nameof(commandText));
-
-            if (singleParameter is null)
-                throw new ArgumentNullException(nameof(singleParameter));
-
-            SqlParameter sqlParameter = CreateSqlParameter(commandText, singleParameter);
-
-            var connection = await OpenConnectionAsync(connectionString, cancellationToken);
-            using var command = new SqlCommand(commandText, connection);
-            command.Parameters.Add(sqlParameter);
-            return await command.ExecuteReaderAsync(System.Data.CommandBehavior.CloseConnection, cancellationToken);
         }
     }
 }

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace AspnetCoreExtensions
+namespace ZeroORM
 {
-    public static class PropertyInfoExtensions
+    internal static class PropertyInfoExtensions
     {
         private static Dictionary<string, PropertyInfo> cacheOfProperties = new Dictionary<string, PropertyInfo>();
 
