@@ -30,3 +30,7 @@ They are implemented as extension method on SqlConnection to better accessiblity
 
 ### Supper Easy Mappers ToEntityAsync, ToListAsync, SetValues, and SetListAsync [SqlDataReaderExtensions](https://github.com/RiadKatby/AspnetCoreExtensions/blob/master/ZeroORM/SqlDataReaderExtensions.cs)
 
+## Roadmap
+1. Create Unit Test
+2. Conduct Benchmark with ef core, dapper, and zeroOrm
+3. Provide centralized place for all ad-hoc sql statements
