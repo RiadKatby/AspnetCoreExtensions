@@ -87,7 +87,7 @@ namespace ZeroORM
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="reader">SqlDataReader instance to be mapped into List of T</param>
-        /// <param name="entities">List of entities that will populated with all entitites</param>
+        /// <param name="entities">List of entities that will populated with all entities</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Task</returns>
         public static async Task SetListAsync<T>(this SqlDataReader reader, ICollection<T> entities, CancellationToken cancellationToken)
@@ -113,6 +113,15 @@ namespace ZeroORM
         /// <returns>Same instance of business entity with properties are filled up.</returns>
         public static T SetValues<T>(this SqlDataReader reader, T entity, Action<T> postSet = null)
         {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader), "reader must not be null.");
+
+            if (reader.IsClosed | !reader.HasRows)
+                throw new InvalidOperationException("reader either Closed or Has no rows.");
+
+            if (entity is null)
+                throw new ArgumentNullException(nameof(entity), "entity must not be null.");
+
             var entityType = entity.GetType();
 
             for (int i = 0; i < reader.FieldCount; i++)
