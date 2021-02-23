@@ -4,12 +4,16 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackageId>SwazerLab.ZeroORM</PackageId>
     <Description>Super performance Micro-ORM for SQL Server, with Zero (Learning Curve, Complexity, and Latency).</Description>
-    <Version>0.0.5</Version>
+    <Version>0.0.6</Version>
     <Authors>Mohammad R. Katby</Authors>
     <Company>SwazerLab</Company>
     <RepositoryUrl>https://github.com/RiadKatby/AspnetCoreExtensions</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Continue documentation for SqlHelper extension methods. Fixing misspelling mistakes</PackageReleaseNotes>
+    <PackageReleaseNotes>Add Intercept function for deserialization process.
+    Enrich Mapping Functions
+    Implement Sync overload for ZeroOrm functions
+    Add Intercept function for parametrization process
+    Fixing misspelling mistakes</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

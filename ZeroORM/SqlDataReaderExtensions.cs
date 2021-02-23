@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,34 +13,39 @@ namespace ZeroORM
     public static class SqlDataReaderExtensions
     {
         /// <summary>
-        /// Create new instance of entityType and fill up all properties from specified <see cref="SqlDataReader"/> instance.
+        /// Map first row of <see cref="SqlDataReader"/> into new instance of <typeparamref name="T"/> if <see cref="SqlDataReader.HasRows"/>, Null otherwise.
         /// </summary>
         /// <param name="reader">Instance of SqlDataReader.</param>
         /// <param name="entityType">Business Entity type.</param>
         /// <returns>New instance of T with properties are filled up.</returns>
-        public static object ToEntity(this SqlDataReader reader, Type entityType)
+        public static T ToEntity<T>(this SqlDataReader reader)
+            where T : new()
         {
-            var entity = Activator.CreateInstance(entityType);
-            return reader.SetValues(entity, null);
+            return ToEntity<T>(reader, null);
         }
 
         /// <summary>
-        /// Create new instance of <typeparamref name="T"/> and fill up all properties from specified <see cref="SqlDataReader"/>.
+        /// Map first row of <see cref="SqlDataReader"/> into new instance of <typeparamref name="T"/> if <see cref="SqlDataReader.HasRows"/>, Null otherwise.
         /// </summary>
         /// <typeparam name="T">Business Entity Type.</typeparam>
         /// <param name="reader">Instance of SqlDataReader.</param>
         /// <returns>New instance of T with properties are filled up.</returns>
-        public static T ToEntity<T>(this SqlDataReader reader, Action<T> postSet = null)
+        public static T ToEntity<T>(this SqlDataReader reader, Action<T, SqlDataReader> postSet)
             where T : new()
         {
             var entityType = typeof(T);
-            var entity = (T)Activator.CreateInstance(entityType);
 
-            return reader.SetValues<T>(entity, postSet);
+            if (reader.Read())
+            {
+                var entity = (T)Activator.CreateInstance(entityType);
+                return reader.SetEntity<T>(entity, postSet);
+            }
+
+            return default;
         }
 
         /// <summary>
-        /// Instance of <typeparamref name="T"/> if SqlDataReader HasRow, Null otherwise.
+        /// Asynchronously map first row of SqlDataReader into new Instance of <typeparamref name="T"/> if <see cref="SqlDataReader.HasRows"/>, Null otherwise.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="reader"></param>
@@ -50,36 +57,81 @@ namespace ZeroORM
             return await reader.ToEntityAsync<T>(null, cancellationToken);
         }
 
-        public static async Task<T> ToEntityAsync<T>(this SqlDataReader reader, Action<T> postSet, CancellationToken cancellationToken)
+        /// <summary>
+        /// Asynchronously map first row of SqlDataReader into new Instance of <typeparamref name="T"/> if <see cref="SqlDataReader.HasRows"/>, Null otherwise.
+        /// </summary>
+        public static async Task<T> ToEntityAsync<T>(this SqlDataReader reader, Action<T, SqlDataReader> postSet, CancellationToken cancellationToken)
             where T : new()
         {
             var entityType = typeof(T);
-            var entity = (T)Activator.CreateInstance(entityType);
 
             if (await reader.ReadAsync(cancellationToken))
-                return reader.SetValues(entity, postSet);
+            {
+                var entity = (T)Activator.CreateInstance(entityType);
+                return reader.SetEntity(entity, postSet);
+            }
 
-            return default(T);
+            return default;
         }
 
-        public static List<T> ToList<T>(this SqlDataReader reader, Action<T> postSet = null)
+        /// <summary>
+        /// Map all rows of <see cref="SqlDataReader"/> into list of <typeparamref name="T"/>, Empty list otherwise.
+        /// </summary>
+        public static List<T> ToList<T>(this SqlDataReader reader)
             where T : new()
         {
             List<T> items = new List<T>();
             while (reader.Read())
-                items.Add(reader.ToEntity<T>(postSet));
+            {
+                var entity = Activator.CreateInstance<T>();
+                SetEntity(reader, entity, null);
+                items.Add(entity);
+            }
 
             return items;
         }
 
-        public static async Task<List<T>> ToListAsync<T>(this SqlDataReader reader, CancellationToken cancellationToken)
+        /// <summary>
+        /// Map all rows of <see cref="SqlDataReader"/> into list of <typeparamref name="T"/>, Empty list otherwise.
+        /// </summary>
+        public static List<T> ToList<T>(this SqlDataReader reader, Action<T, SqlDataReader> postSet)
+            where T : new()
+        {
+            List<T> items = new List<T>();
+            while (reader.Read())
+            {
+                var entity = Activator.CreateInstance<T>();
+                SetEntity(reader, entity, postSet);
+                items.Add(entity);
+            }
+
+            return items;
+        }
+
+        /// <summary>
+        /// Asynchronously map all rows of <see cref="SqlDataReader"/> into list of <typeparamref name="T"/>, Empty list otherwise.
+        /// </summary>
+        public static async Task<List<T>> ToListAsync<T>(this SqlDataReader reader, Action<T, SqlDataReader> postSet, CancellationToken cancellationToken)
             where T : new()
         {
             List<T> items = new List<T>();
             while (await reader.ReadAsync(cancellationToken))
-                items.Add(reader.ToEntity<T>());
+            {
+                var item = Activator.CreateInstance<T>();
+                SetEntity(reader, item, postSet);
+                items.Add(item);
+            }
 
             return items;
+        }
+
+        /// <summary>
+        /// Asynchronously map all rows of <see cref="SqlDataReader"/> into list of <typeparamref name="T"/>, Empty list otherwise.
+        /// </summary>
+        public static async Task<List<T>> ToListAsync<T>(this SqlDataReader reader, CancellationToken cancellationToken)
+            where T : new()
+        {
+            return await ToListAsync<T>(reader, null, cancellationToken);
         }
 
         /// <summary>
@@ -94,14 +146,22 @@ namespace ZeroORM
             where T : new()
         {
             while (await reader.ReadAsync(cancellationToken))
-                entities.Add(reader.ToEntity<T>());
+            {
+                var entity = Activator.CreateInstance<T>();
+                reader.SetEntity(entity, null);
+                entities.Add(entity);
+            }
         }
 
-        public static async Task SetListAsync<T>(this SqlDataReader reader, ICollection<T> entities, Action<T> postSet, CancellationToken cancellationToken)
+        public static async Task SetListAsync<T>(this SqlDataReader reader, ICollection<T> entities, Action<T, SqlDataReader> postSet, CancellationToken cancellationToken)
             where T : new()
         {
             while (await reader.ReadAsync(cancellationToken))
-                entities.Add(reader.ToEntity<T>(postSet));
+            {
+                var entity = Activator.CreateInstance<T>();
+                reader.SetEntity(entity, postSet);
+                entities.Add(entity);
+            }
         }
 
         /// <summary>
@@ -111,7 +171,7 @@ namespace ZeroORM
         /// <param name="reader">Instance of SqlDataReader.</param>
         /// <param name="entity">instance of business entity.</param>
         /// <returns>Same instance of business entity with properties are filled up.</returns>
-        public static T SetValues<T>(this SqlDataReader reader, T entity, Action<T> postSet = null)
+        public static T SetEntity<T>(this SqlDataReader reader, T entity, Action<T, SqlDataReader> postSet = null)
         {
             var entityType = entity.GetType();
 
@@ -123,15 +183,103 @@ namespace ZeroORM
                 var propertyInfo = PropertyInfoExtensions.GetProperty(entityType, columnName);
                 if (propertyInfo != null)
                 {
+                    // https://stackoverflow.com/a/8605677/1726318
+                    var nullableType = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
+                    if (dbValue != null && nullableType != null && nullableType.IsEnum)
+                        dbValue = Enum.ToObject(nullableType, dbValue);
+
                     propertyInfo.SetValue(entity, dbValue);
                 }
                 else
                     Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, entityType.Name);
             }
 
-            postSet?.Invoke(entity);
+            postSet?.Invoke(entity, reader);
 
             return entity;
+        }
+
+        public static void ReadEach<T>(this SqlDataReader reader, Action<T> action, Action<T, SqlDataReader> postSet)
+        {
+            while (reader.Read())
+            {
+                var entity = Activator.CreateInstance<T>();
+                SetEntity(reader, entity, postSet);
+                action(entity);
+            }
+        }
+
+        public static void ReadEach<T>(this SqlDataReader reader, Action<T> action)
+        {
+            while (reader.Read())
+            {
+                var entity = Activator.CreateInstance<T>();
+                SetEntity(reader, entity, null);
+                action(entity);
+            }
+        }
+
+        public static void SetValue<T, U>(this T item, Expression<Func<T, U>> expression, string dbColumnName, SqlDataReader reader)
+        {
+            var member = expression.Body as MemberExpression;
+
+            string columnName = member.Member.Name;
+            Type itemType = member.Expression.Type;
+
+            var dbValue = reader[dbColumnName];
+            if (dbValue != DBNull.Value)
+            {
+                PropertyInfo property = PropertyInfoExtensions.GetProperty(itemType, columnName);
+                if (property != null)
+                {
+                    property.SetValue(item, dbValue);
+                }
+                else
+                    Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, itemType.Name);
+            }
+        }
+
+        public static T SetValue<T, U>(this T item, Expression<Func<T, U>> expression, object value)
+        {
+            var member = expression.Body as MemberExpression;
+
+            string columnName = member.Member.Name;
+            Type itemType = member.Expression.Type;
+
+            if (value != DBNull.Value)
+            {
+                PropertyInfo property = PropertyInfoExtensions.GetProperty(itemType, columnName);
+                if (property != null)
+                {
+                    property.SetValue(item, value);
+                }
+                else
+                    Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, value, itemType.Name);
+            }
+
+            return item;
+        }
+
+        public static T SetValue<T, U>(this T item, Expression<Func<T, U>> expression, SqlDataReader reader)
+        {
+            var member = expression.Body as MemberExpression;
+
+            string columnName = member.Member.Name;
+            Type itemType = member.Expression.Type;
+
+            var dbValue = reader[columnName];
+            if (dbValue != DBNull.Value)
+            {
+                PropertyInfo property = PropertyInfoExtensions.GetProperty(itemType, columnName);
+                if (property != null)
+                {
+                    property.SetValue(item, dbValue);
+                }
+                else
+                    Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, itemType.Name);
+            }
+
+            return item;
         }
     }
 }
