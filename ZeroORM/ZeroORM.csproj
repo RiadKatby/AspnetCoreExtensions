@@ -9,7 +9,11 @@
     <Company>SwazerLab</Company>
     <RepositoryUrl>https://github.com/RiadKatby/AspnetCoreExtensions</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageReleaseNotes>Continue documentation for SqlHelper extension methods. Fixing misspelling mistakes. add tags to nuget package.</PackageReleaseNotes>
+    <PackageReleaseNotes>Add Intercept function for deserialization process.
+    Enrich Mapping Functions
+    Implement Sync overload for ZeroOrm functions
+    Add Intercept function for parametrization process
+    Fixing misspelling mistakes</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
     <PackageTags>orm, micro-orm, sql, O/RM, Core</PackageTags>
   </PropertyGroup>
