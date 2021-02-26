@@ -49,12 +49,12 @@ namespace ZeroORM
             Debug.Assert(erc > 0);
         }
 
-public async Task<List<Product>> FindByQuantityAsync(decimal quantity, CancellationToken cancellationToken)
-{
-    var ProductSelectByQuantitySql = "SELECT * FROM Products WHERE (Quantity = @Quantity)";
-    using var reader = await SqlHelper.ExecuteReaderAsync(connectionString, ProductSelectByQuantitySql, quantity, cancellationToken);
-    return await reader.ToListAsync<Product>(cancellationToken);
-}
+        public async Task<List<Product>> FindByQuantityAsync(decimal quantity, CancellationToken cancellationToken)
+        {
+            var ProductSelectByQuantitySql = "SELECT * FROM Products WHERE (Quantity = @Quantity)";
+            using var reader = await SqlHelper.ExecuteReaderAsync(connectionString, ProductSelectByQuantitySql, quantity, cancellationToken);
+            return await reader.ToListAsync<Product>(cancellationToken);
+        }
 
         public List<Product> FindByQuantity(decimal quantity)
         {
@@ -91,3 +91,4 @@ public async Task<List<Product>> FindByQuantityAsync(decimal quantity, Cancellat
             return products;
         }
     }
+}
