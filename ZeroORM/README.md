@@ -1,4 +1,4 @@
-# New Features in 0.0.6v
+# New Features in 0.0.7v
 ## Intercept Deserialize Process:
 Mapping functions of `SqlDataReader` has got new action delegate `Action<T, SqlDataReader> postSet` which allow you to add your custom mapping code after default mapping of ZeroOrm is finished, and here are list of helper extensions that are useful when mapping `SqlDataReader` into business object
 1. `SetValue(this, expression, dbColumnName, reader)` useful when you database column name is diffrent from business object property name, so you refere to property using expression and provide the dbColumnName explecitly.
