@@ -11,6 +11,7 @@ namespace AspnetCoreExtensions
 {
     public static class WebExtensions
     {
+        // clean version
         /// <summary>
         /// Determines whether the specified HTTP request is an AJAX request.
         /// </summary>

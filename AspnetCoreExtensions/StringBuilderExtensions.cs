@@ -13,5 +13,13 @@ namespace AspnetCoreExtensions
 
             return sb;
         }
+
+        public static StringBuilder InsertIf(this StringBuilder sb, bool condition, int index, string value)
+        {
+            if (condition)
+                sb.Insert(index, value);
+
+            return sb;
+        }
     }
 }
