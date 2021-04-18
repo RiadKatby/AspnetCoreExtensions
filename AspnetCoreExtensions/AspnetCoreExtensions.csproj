@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PackageId>AspnetCoreExtensions</PackageId>
-    <Version>0.0.1</Version>
+    <Version>0.0.3</Version>
     <Authors>SwazerLab</Authors>
     <Company>SwazerLab</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -7,7 +8,7 @@ namespace ZeroORM
 {
     internal static class PropertyInfoExtensions
     {
-        private static Dictionary<string, PropertyInfo> cacheOfProperties = new Dictionary<string, PropertyInfo>();
+        private static ConcurrentDictionary<string, PropertyInfo> cacheOfProperties = new ConcurrentDictionary<string, PropertyInfo>();
 
         public static PropertyInfo GetProperty<T>(string propertyName)
         {
