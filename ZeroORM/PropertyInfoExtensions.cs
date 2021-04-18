@@ -8,6 +8,7 @@ namespace ZeroORM
 {
     internal static class PropertyInfoExtensions
     {
+        // this change need to be tested in parallel environment
         private static ConcurrentDictionary<string, PropertyInfo> cacheOfProperties = new ConcurrentDictionary<string, PropertyInfo>();
 
         public static PropertyInfo GetProperty<T>(string propertyName)
