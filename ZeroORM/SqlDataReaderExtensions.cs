@@ -192,12 +192,8 @@ namespace ZeroORM
                 var propertyInfo = PropertyInfoExtensions.GetProperty(entityType, columnName);
                 if (propertyInfo != null)
                 {
-                    // https://stackoverflow.com/a/8605677/1726318
-                    var nullableType = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
-                    if (dbValue != null && nullableType != null && nullableType.IsEnum)
-                        dbValue = Enum.ToObject(nullableType, dbValue);
-
-                    propertyInfo.SetValue(entity, dbValue);
+                    if (!propertyInfo.TrySetValue(entity, dbValue))
+                        Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, entityType.Name);
                 }
                 else
                     Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, entityType.Name);
@@ -241,7 +237,8 @@ namespace ZeroORM
                 PropertyInfo property = PropertyInfoExtensions.GetProperty(itemType, columnName);
                 if (property != null)
                 {
-                    property.SetValue(item, dbValue);
+                    if (!property.TrySetValue(item, dbValue))
+                        Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, itemType.Name);
                 }
                 else
                     Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, itemType.Name);
@@ -260,7 +257,8 @@ namespace ZeroORM
                 PropertyInfo property = PropertyInfoExtensions.GetProperty(itemType, columnName);
                 if (property != null)
                 {
-                    property.SetValue(item, value);
+                    if (!property.TrySetValue(item, value))
+                        Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, value, itemType.Name);
                 }
                 else
                     Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, value, itemType.Name);
@@ -282,13 +280,34 @@ namespace ZeroORM
                 PropertyInfo property = PropertyInfoExtensions.GetProperty(itemType, columnName);
                 if (property != null)
                 {
-                    property.SetValue(item, dbValue);
+                    if (!property.TrySetValue(item, dbValue))
+                        Debug.WriteLine("Entity Property[{0}] has not setter, DbValue[{1}].", columnName, dbValue);
                 }
                 else
                     Debug.WriteLine("DbColumn[{0} = {1}] has no mapping in Entity[{2}]", columnName, dbValue, itemType.Name);
             }
 
             return item;
+        }
+
+        internal static bool TrySetValue(this PropertyInfo propertyInfo, object entity, object value)
+        {
+            if (propertyInfo == null)
+                throw new ArgumentNullException(nameof(propertyInfo));
+
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            // https://stackoverflow.com/a/8605677/1726318
+            var nullableType = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
+            if (value != null && nullableType != null && nullableType.IsEnum)
+                value = Enum.ToObject(nullableType, value);
+
+            if (propertyInfo.GetSetMethod(true) == null)
+                return false;
+
+            propertyInfo.SetValue(entity, value);
+            return true;
         }
     }
 }
